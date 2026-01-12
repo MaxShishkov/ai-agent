@@ -19,7 +19,7 @@ schema_get_file_content = types.FunctionDeclaration(
 )
 
 
-def get_file_content(working_directory, file_path):
+def get_file_content(working_directory: str, file_path: str) -> str:
     try:
         working_dir_abs = os.path.abspath(working_directory)
         target_file = os.path.normpath(os.path.join(working_dir_abs, file_path))
