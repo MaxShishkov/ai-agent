@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 import argparse
+from prompts import system_prompt
+from call_function import available_functions
 
 
 
@@ -20,11 +22,17 @@ def main():
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
     
+    model_name = "gemini-2.5-flash"
     messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])]
     
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=messages
+        model=model_name,
+        contents=messages,
+        config=types.GenerateContentConfig(
+            tools=[available_functions],
+            system_instruction=system_prompt,
+            temperature=0,
+        ),
     )
     
     if args.verbose:
@@ -35,7 +43,11 @@ def main():
         else:
             raise RuntimeError("usage metadata is None")
     
-    print(response.text)
+    if(response.function_calls):
+        for function in response.function_calls:
+            print(f"Calling function: {function.name}({function.args})")
+    else:       
+        print(response.text)
 
 
 if __name__ == "__main__":
