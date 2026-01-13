@@ -4,7 +4,7 @@ from google import genai
 from google.genai import types
 import argparse
 from prompts import system_prompt
-from call_function import available_functions
+from call_function import available_functions, call_function
 
 
 
@@ -44,8 +44,21 @@ def main():
             raise RuntimeError("usage metadata is None")
     
     if(response.function_calls):
-        for function in response.function_calls:
-            print(f"Calling function: {function.name}({function.args})")
+        for function_call in response.function_calls:
+            function_call_result = call_function(function_call)
+            
+            if not function_call_result.parts:
+                raise Exception("Error: Function cal parts is empty")
+            
+            if not function_call_result.parts[0].function_response.response:
+                raise Exception("Error: Function response object is None in .parts[0].function_response.response")
+            
+            function_response_list = []
+            function_response_list.append(function_call_result.parts[0])
+            
+            if args.verbose:
+                print(f"-> {function_call_result.parts[0].function_response.response}")
+
     else:       
         print(response.text)
 
